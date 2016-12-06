@@ -1,0 +1,4 @@
+Dog*
+bin/preictal_dataset.hdf5
+bin/interictal_dataset.hdf5
+bin/testing_dataset.hdf5
