@@ -3,7 +3,68 @@ import h5py
 import scipy.io as sio
 
 
-def add_dataset(h5py_object, filename, values):
+class Base:
+    def __init__(self, input_path, filename):
+        # location of the file
+        self.input_path = input_path
+        # flag used when adding files
+        self.first_file = True
+        # index to keep track of size of dataset
+        self.last_index = 0
+        # length list used for HMM training
+        self.training_dataset_lengths = list()
+        # name of the file
+        self.filename = filename + '.hdf5'
+        # new training dataset location
+        self.training_path_filename = ''
+        # h5py object where values are store
+        self.training_dataset_object = ''
+
+        # temporary file to store training and testing data information
+        self.training_path_filename = os.path.join(input_path, self.filename)
+        self.training_dataset_object = h5py.File(self.training_path_filename, 'w')
+
+    def add_dataset(self, dataset, labels):
+
+        # shape of the inner dataset
+        n_inner_row, n_inner_column = dataset.shape
+
+        # get the size of the new dataset
+        total_rows = self.last_index + n_inner_row
+
+        if self.first_file:
+            self.training_dataset_object.create_dataset(name='training data',
+                                                        shape=(n_inner_row, n_inner_column),
+                                                        maxshape=(None, n_inner_column), chunks=True)
+
+            self.training_dataset_object['training data'][:, :] = dataset
+            self.first_file = False
+
+        else:
+
+            # resize the dataset to accommodate the new data
+            self.training_dataset_object['training data'].resize(total_rows, axis=0)
+            # add new data
+            self.training_dataset_object['training data'][
+                self.last_index:] = dataset
+
+        # increase the dataset size
+        self.last_index = total_rows
+        # add dataset size to a list of lengths
+        self.training_dataset_lengths.append(n_inner_row)
+
+    def get_values(self, dataset_name):
+        self.training_dataset_object[dataset_name]
+
+
+def add_dataset(h5py_object, values, filename):
+    """
+    Add the points to the h5py variable
+    :param h5py_object: h5py object dataset
+    :param filename: name of the file to add
+    :param values: data points
+    :return: None
+    """
     # removing .mat file format
     n_filename = filename.replace('.mat', '')
     # add dataset to object
@@ -11,6 +72,11 @@ def add_dataset(h5py_object, filename, values):
 
 
 def convert_matlab_h5py(dataset_path):
+    """
+    Creates h5py files from all the matlab files
+    :param dataset_path: matlab folder directory
+    :return: None
+    """
     # files inside the folder
     matlab_files = next(os.walk(dataset_path))[2]
 
@@ -74,9 +140,56 @@ def convert_matlab_h5py(dataset_path):
     print 'finished adding matlab files'
     print 'number preictal={0}\nnumber interictal={1}\nnumber test={2}'.format(n_preictal, n_interictal, n_test)
 
+
+def concatenate_data_points(dataset_path):
+    """
+    Compress all the h5py files into a training dataset
+    :param dataset_path: location of the h5py files
+    :return: training and testing h5py objects
+    """
+
+    # files inside the folder
+    h5py_files = next(os.walk(dataset_path))[2]
+
+    for s_file in h5py_files:
+        if 'interictal_dataset' in s_file:
+            interictal_class = Base(input_path=dataset_path, filename='interictal_training_dataset')
+            print 'processing interictal'
+            file_path = os.path.join(dataset_path, s_file)
+            interictal_object = h5py.File(file_path, 'r')
+            # loop through all the keys of interictal
+            total_number_keys = len(interictal_object.keys())
+            for index_key, key in enumerate(interictal_object.keys()):
+                print 'processing key={0}, {1} out of {2}'.format(key, index_key, total_number_keys)
+                interictal_class.add_dataset(dataset=interictal_object[key].value.transpose(), labels=1)
+            interictal_object.close()
+        elif 'preictal_dataset' in s_file:
+            preictal_class = Base(input_path=dataset_path, filename='preictal_training_dataset')
+            print 'processing preictal'
+            file_path = os.path.join(dataset_path, s_file)
+            preictal_object = h5py.File(file_path, 'r')
+            total_number_keys = len(preictal_object.keys())
+            for index_key, key in enumerate(preictal_object.keys()):
+                print 'processing key={0}, {1} out of {2}'.format(key, index_key, total_number_keys)
+                preictal_class.add_dataset(dataset=preictal_object[key].value.transpose(), labels=0)
+            preictal_object.close()
+        elif 'testing_dataset' in s_file:
+            testing_class = Base(input_path=dataset_path, filename='testing_pre-inter_ictal_dataset')
+            print 'processing testing'
+            file_path = os.path.join(dataset_path, s_file)
+            testing_object = h5py.File(file_path, 'r')
+            total_number_keys = len(testing_object.keys())
+            for index_key, key in enumerate(testing_object.keys()):
+                print 'processing key={0}, {1} out of {2}'.format(key, index_key, total_number_keys)
+                testing_class.add_dataset(dataset=testing_object[key].value.transpose(), labels=0)
+            testing_object.close()
+
+
 if __name__ == '__main__':
 
-    training_data = convert_matlab_h5py(dataset_path='/Users/jguerra/PycharmProjects/Big-Data-Project/Dog_5')
+    # convert_matlab_h5py(dataset_path='/Users/jguerra/PycharmProjects/Big-Data-Project/Dog_5')
+    concatenate_data_points(dataset_path='/Users/jguerra/PycharmProjects/Big-Data-Project/dataset')
+
 
 
 
