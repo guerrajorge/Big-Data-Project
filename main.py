@@ -214,7 +214,7 @@ def hmm_build_train(dataset_path):
     # calculate the length of each of the unique matlab files conforming the interictal dataset
     interictal_length = np.array([239766] * 450)
     # create a interictal Gaussian HMM object
-    interictal_hmm = hmm.GaussianHMM(n_components=8, verbose=Trued)
+    interictal_hmm = hmm.GaussianHMM(n_components=8, verbose=True)
     # train the model
     interictal_hmm.fit(interictal_dataset['training data'], interictal_length)
     preictal_log_prob, _ = interictal_hmm.decode(testing_data_path['training data'], testing_length)
@@ -222,9 +222,13 @@ def hmm_build_train(dataset_path):
 
 if __name__ == '__main__':
 
+    # big-data project path
+    program_path = '/'.join(os.path.realpath(__file__).split('/')[:-1])
+    dataset_path = os.path.join(program_path, 'dataset')
+
     # convert_matlab_h5py(dataset_path='/Users/jguerra/PycharmProjects/Big-Data-Project/Dog_5')
     # concatenate_data_points(dataset_path='/Users/jguerra/PycharmProjects/Big-Data-Project/dataset')
-    hmm_build_train(dataset_path='/Users/jguerra/PycharmProjects/Big-Data-Project/dataset')
+    hmm_build_train(dataset_path=dataset_path)
 
 
 
