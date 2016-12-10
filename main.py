@@ -238,7 +238,7 @@ def hmm_build_train(dataset_path):
         print '\ttraining the model'
         preictal_hmm.fit(preictal_dataset['training data'], preictal_length)
 
-        # storing model
+        print '\tstoring model'
         hmm_preictal_path_filename = os.path.join(models_path, 'hmm_preictal')
         joblib.dump(preictal_hmm, hmm_preictal_path_filename)
 
@@ -254,7 +254,7 @@ def hmm_build_train(dataset_path):
         print '\ttraining the model'
         interictal_hmm.fit(interictal_dataset['training data'][:7192980], interictal_length)
 
-        # storing model
+        print '\tstoring model'
         hmm_interictal_path_filename = os.path.join(models_path, 'hmm_interictal')
         joblib.dump(preictal_hmm, hmm_interictal_path_filename)
 
@@ -266,8 +266,8 @@ def hmm_build_train(dataset_path):
 
     for testing_key in testing_dataset.keys():
         print 'calculating likelihood'
-        interictal_log_prob, _ = interictal_hmm.decode(testing_data_path[testing_key], testing_length)
-        preictal_log_prob, _ = preictal_hmm.decode(testing_data_path[testing_key], testing_length)
+        interictal_log_prob, _ = interictal_hmm.decode(testing_dataset[testing_key].value.transpose(), [239766])
+        preictal_log_prob, _ = preictal_hmm.decode(testing_dataset[testing_key].value.transpose(), [239766])
 
         if interictal_log_prob > preictal_log_prob:
             # 0 = interictal
