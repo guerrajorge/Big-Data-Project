@@ -3,6 +3,7 @@ import h5py
 import scipy.io as sio
 from hmmlearn import hmm
 import numpy as np
+import joblib
 
 
 class Base:
@@ -197,25 +198,71 @@ def hmm_build_train(dataset_path):
     print 'calculating the length of each of the unique matlab files conforming the testing dataset'
     testing_length = np.array([239766] * 191)
 
-    print 'loading the dataset'
-    preictal_dataset = h5py.File(name=preictal_data_path, mode='r')
-    interictal_dataset = h5py.File(name=interictal_data_path, mode='r')
+    preictal_model_loaded = False
+    interictal_model_loaded = False
+
+    models_path = os.path.join(dataset_path, 'models')
+    # check if model are saved
+    if os.path.exists(models_path):
+        # hmm inside the models' folder
+        hmm_files = next(os.walk(models_path))[2]
+
+        for m_file in hmm_files:
+            if ('hmm_preictal' in m_file) and ('.npy' not in m_file):
+                # calculate the whole path
+                data_path = os.path.join(models_path, m_file)
+                # load the model
+                preictal_hmm = joblib.load(data_path)
+                # turn on flag so the code does not re-train the model
+                preictal_model_loaded = True
+            elif ('hmm_interictal' in m_file) and ('.npy' not in m_file):
+                # calculate the whole path
+                data_path = os.path.join(models_path, m_file)
+                # load the model
+                interictal_hmm = joblib.load(data_path)
+                # turn on flag so the code does not re-train the model
+                interictal_model_loaded = True
+
+    # create location for storing models for later use
+    if not os.path.exists(models_path):
+        os.mkdir(models_path)
+
+    # check if model loaded
+    if not preictal_model_loaded:
+        print 'loading preictal dataset'
+        preictal_dataset = h5py.File(name=preictal_data_path, mode='r')
+        # calculate the length of each of the unique matlab files conforming the preictal dataset
+        preictal_length = np.array([239766] * 30)
+        print 'creating a preictal Gaussian HMM object'
+        preictal_hmm = hmm.GaussianHMM(n_components=8, verbose=True)
+        print '\ttraining the model'
+        preictal_hmm.fit(preictal_dataset['training data'], preictal_length)
+
+        # storing model
+        hmm_preictal_path_filename = os.path.join(models_path, 'hmm_preictal')
+        joblib.dump(preictal_hmm, hmm_preictal_path_filename)
+
+    # check if model loaded
+    if not interictal_model_loaded:
+        print 'loading interictal dataset'
+        interictal_dataset = h5py.File(name=interictal_data_path, mode='r')
+        # calculate the length of each of the unique matlab files conforming the interictal dataset
+        # interictal_length = np.array([239766] * 450)
+        interictal_length = np.array([239766] * 30)
+        print 'creating a interictal Gaussian HMM object'
+        interictal_hmm = hmm.GaussianHMM(n_components=8, verbose=True)
+        print '\ttraining the model'
+        interictal_hmm.fit(interictal_dataset['training data'][:7192980], interictal_length)
+
+        # storing model
+        hmm_interictal_path_filename = os.path.join(models_path, 'hmm_interictal')
+        joblib.dump(preictal_hmm, hmm_interictal_path_filename)
+
+    import IPython
+    IPython.embed()
+
+    print 'loading testing dataset'
     testing_dataset = h5py.File(name=testing_data_path, mode='r')
-
-    # calculate the length of each of the unique matlab files conforming the preictal dataset
-    preictal_length = np.array([239766] * 30)
-    print 'creating a preictal Gaussian HMM object'
-    preictal_hmm = hmm.GaussianHMM(n_components=8, verbose=True)
-    print '\ttraining the model'
-    preictal_hmm.fit(preictal_dataset['training data'], preictal_length)
-
-    # calculate the length of each of the unique matlab files conforming the interictal dataset
-    # interictal_length = np.array([239766] * 450)
-    interictal_length = np.array([239766] * 30)
-    print 'creating a interictal Gaussian HMM object'
-    interictal_hmm = hmm.GaussianHMM(n_components=8, verbose=True)
-    print '\ttraining the model'
-    interictal_hmm.fit(interictal_dataset['training data'][:7192980], interictal_length)
 
     for testing_key in testing_dataset.keys():
         print 'calculating likelihood'
