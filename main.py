@@ -189,35 +189,36 @@ def concatenate_data_points(dataset_path):
 
 def hmm_build_train(dataset_path):
 
-    # create the datasets path
+    print 'creating the datasets path'
     preictal_data_path = os.path.join(dataset_path, 'preictal_training_dataset.hdf5')
     interictal_data_path = os.path.join(dataset_path, 'interictal_training_dataset.hdf5')
     testing_data_path = os.path.join(dataset_path, 'testing_dataset.hdf5')
 
-    # calculate the length of each of the unique matlab files conforming the testing dataset
+    print 'calculating the length of each of the unique matlab files conforming the testing dataset'
     testing_length = np.array([239766] * 191)
 
-    # load the dataset
+    print 'loading the dataset'
     preictal_dataset = h5py.File(name=preictal_data_path, mode='r')
     interictal_dataset = h5py.File(name=interictal_data_path, mode='r')
     testing_dataset = h5py.File(name=testing_data_path, mode='r')
 
     # calculate the length of each of the unique matlab files conforming the preictal dataset
     preictal_length = np.array([239766] * 30)
-    # create a preictal Gaussian HMM object
+    print 'creating a preictal Gaussian HMM object'
     preictal_hmm = hmm.GaussianHMM(n_components=8, verbose=True)
-    # train the model
+    print '\ttraining the model'
     preictal_hmm.fit(preictal_dataset['training data'], preictal_length)
 
     # calculate the length of each of the unique matlab files conforming the interictal dataset
-    interictal_length = np.array([239766] * 450)
-    # create a interictal Gaussian HMM object
+    # interictal_length = np.array([239766] * 450)
+    interictal_length = np.array([239766] * 30)
+    print 'creating a interictal Gaussian HMM object'
     interictal_hmm = hmm.GaussianHMM(n_components=8, verbose=True)
-    # train the model
-    interictal_hmm.fit(interictal_dataset['training data'], interictal_length)
+    print '\ttraining the model'
+    interictal_hmm.fit(interictal_dataset['training data'][:7192980], interictal_length)
 
     for testing_key in testing_dataset.keys():
-        # calculate likelihood
+        print 'calculating likelihood'
         interictal_log_prob, _ = interictal_hmm.decode(testing_data_path[testing_key], testing_length)
         preictal_log_prob, _ = preictal_hmm.decode(testing_data_path[testing_key], testing_length)
 
@@ -232,11 +233,11 @@ if __name__ == '__main__':
 
     # big-data project path
     program_path = '/'.join(os.path.realpath(__file__).split('/')[:-1])
-    dataset_path = os.path.join(program_path, 'dataset')
+    dataset_dir_path = os.path.join(program_path, 'dataset')
 
     # convert_matlab_h5py(dataset_path='/Users/jguerra/PycharmProjects/Big-Data-Project/Dog_5')
     # concatenate_data_points(dataset_path='/Users/jguerra/PycharmProjects/Big-Data-Project/dataset')
-    hmm_build_train(dataset_path=dataset_path)
+    hmm_build_train(dataset_path=dataset_dir_path)
 
 
 
