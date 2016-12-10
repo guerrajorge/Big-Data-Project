@@ -195,9 +195,6 @@ def hmm_build_train(dataset_path):
     interictal_data_path = os.path.join(dataset_path, 'interictal_training_dataset.hdf5')
     testing_data_path = os.path.join(dataset_path, 'testing_dataset.hdf5')
 
-    print 'calculating the length of each of the unique matlab files conforming the testing dataset'
-    testing_length = np.array([239766] * 191)
-
     preictal_model_loaded = False
     interictal_model_loaded = False
 
@@ -247,19 +244,15 @@ def hmm_build_train(dataset_path):
         print 'loading interictal dataset'
         interictal_dataset = h5py.File(name=interictal_data_path, mode='r')
         # calculate the length of each of the unique matlab files conforming the interictal dataset
-        # interictal_length = np.array([239766] * 450)
-        interictal_length = np.array([239766] * 30)
+        interictal_length = np.array([239766] * 450)
         print 'creating a interictal Gaussian HMM object'
         interictal_hmm = hmm.GaussianHMM(n_components=8, verbose=True)
         print '\ttraining the model'
-        interictal_hmm.fit(interictal_dataset['training data'][:7192980], interictal_length)
+        interictal_hmm.fit(interictal_dataset['training data'], interictal_length)
 
         print '\tstoring model'
         hmm_interictal_path_filename = os.path.join(models_path, 'hmm_interictal')
         joblib.dump(preictal_hmm, hmm_interictal_path_filename)
-
-    import IPython
-    IPython.embed()
 
     print 'loading testing dataset'
     testing_dataset = h5py.File(name=testing_data_path, mode='r')
