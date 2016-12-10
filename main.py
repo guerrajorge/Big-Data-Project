@@ -38,7 +38,7 @@ class Base:
         if self.first_file:
             self.training_dataset_object.create_dataset(name='training data',
                                                         shape=(n_inner_row, n_inner_column),
-                                                        maxshape=(None, n_inner_column), chunks=True)
+                                                        maxshape=(None, n_inner_column), chunks=True, dtype='float64')
 
             self.training_dataset_object['training data'][:, :] = dataset
             self.first_file = False
@@ -71,7 +71,7 @@ def add_dataset(h5py_object, values, filename):
     # removing .mat file format
     n_filename = filename.replace('.mat', '')
     # add dataset to object
-    h5py_object.create_dataset(name=n_filename, data=values)
+    h5py_object.create_dataset(name=n_filename, data=values, dtype='float64')
 
 
 def convert_matlab_h5py(dataset_path):
@@ -244,11 +244,16 @@ def hmm_build_train(dataset_path):
         print 'loading interictal dataset'
         interictal_dataset = h5py.File(name=interictal_data_path, mode='r')
         # calculate the length of each of the unique matlab files conforming the interictal dataset
-        interictal_length = np.array([239766] * 450)
+        # interictal_length = np.array([239766] * 450)
+        # interictal_length = np.array([239766] * 300)
+        # interictal_length = np.array([239766] * 200)
+        interictal_length = np.array([239766] * 100)
         print 'creating a interictal Gaussian HMM object'
         interictal_hmm = hmm.GaussianHMM(n_components=8, verbose=True)
         print '\ttraining the model'
-        interictal_hmm.fit(interictal_dataset['training data'], interictal_length)
+        # 200
+        # interictal_hmm.fit(interictal_dataset['training data'][:47953200], interictal_length)
+        interictal_hmm.fit(interictal_dataset['training data'][:23976600], interictal_length)
 
         print '\tstoring model'
         hmm_interictal_path_filename = os.path.join(models_path, 'hmm_interictal')
@@ -276,7 +281,7 @@ if __name__ == '__main__':
     dataset_dir_path = os.path.join(program_path, 'dataset')
 
     # convert_matlab_h5py(dataset_path='/Users/jguerra/PycharmProjects/Big-Data-Project/Dog_5')
-    # concatenate_data_points(dataset_path='/Users/jguerra/PycharmProjects/Big-Data-Project/dataset')
+    # concatenate_data_points(dataset_path=dataset_dir_path)
     hmm_build_train(dataset_path=dataset_dir_path)
 
 
