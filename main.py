@@ -208,8 +208,6 @@ def hmm_build_train(dataset_path):
     preictal_hmm = hmm.GaussianHMM(n_components=8, verbose=True)
     # train the model
     preictal_hmm.fit(preictal_dataset['training data'], preictal_length)
-    # calculate likelihood
-    preictal_log_prob, _ = preictal_hmm.decode(testing_data_path['training data'], testing_length)
 
     # calculate the length of each of the unique matlab files conforming the interictal dataset
     interictal_length = np.array([239766] * 450)
@@ -217,8 +215,18 @@ def hmm_build_train(dataset_path):
     interictal_hmm = hmm.GaussianHMM(n_components=8, verbose=True)
     # train the model
     interictal_hmm.fit(interictal_dataset['training data'], interictal_length)
-    preictal_log_prob, _ = interictal_hmm.decode(testing_data_path['training data'], testing_length)
 
+    for testing_key in testing_dataset.keys():
+        # calculate likelihood
+        interictal_log_prob, _ = interictal_hmm.decode(testing_data_path[testing_key], testing_length)
+        preictal_log_prob, _ = preictal_hmm.decode(testing_data_path[testing_key], testing_length)
+
+        if interictal_log_prob > preictal_log_prob:
+            # 0 = interictal
+            print 'data= {0} prediction {1}'.format(testing_key, 0)
+        else:
+            # 1 = preictal
+            print 'data= {0} prediction {1}'.format(testing_key, 1)
 
 if __name__ == '__main__':
 
