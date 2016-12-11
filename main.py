@@ -230,7 +230,7 @@ def process_data_points(program_path):
 
     writing_file_path = os.path.join(dataset_path, 'processed_interictal_training_dataset.hdf5')
     interictal_writing_object = h5py.File(name=writing_file_path, mode='w')
-    writing_file_path = os.path.join(dataset_path, 'processed_prerictal_training_dataset.hdf5')
+    writing_file_path = os.path.join(dataset_path, 'processed_preictal_training_dataset.hdf5')
     preictal_writing_object = h5py.File(name=writing_file_path, mode='w')
     writing_file_path = os.path.join(dataset_path, 'processed_testing_training_dataset.hdf5')
     testing_writing_object = h5py.File(name=writing_file_path, mode='w')
@@ -289,18 +289,18 @@ def concatenate_data_points(program_path):
     h5py_files = next(os.walk(dataset_path))[2]
 
     for s_file in h5py_files:
-        if 'processed_interictal' in s_file:
-            interictal_class = Base(input_path=dataset_path, filename='final_interictal_training_dataset')
-            print 'processing interictal'
-            file_path = os.path.join(dataset_path, s_file)
-            interictal_object = h5py.File(file_path, 'r')
-            # loop through all the keys of interictal
-            total_number_keys = len(interictal_object.keys())
-            for index_key, key in enumerate(interictal_object.keys()):
-                print 'processing key={0}, {1} out of {2}'.format(key, index_key, total_number_keys)
-                interictal_class.add_dataset(dataset=interictal_object[key].value.transpose(), labels=1)
-            interictal_object.close()
-        elif 'processed_preictal' in s_file:
+    #     if 'processed_interictal' in s_file:
+    #         interictal_class = Base(input_path=dataset_path, filename='final_interictal_training_dataset')
+    #         print 'processing interictal'
+    #         file_path = os.path.join(dataset_path, s_file)
+    #         interictal_object = h5py.File(file_path, 'r')
+    #         # loop through all the keys of interictal
+    #         total_number_keys = len(interictal_object.keys())
+    #         for index_key, key in enumerate(interictal_object.keys()):
+    #             print 'processing key={0}, {1} out of {2}'.format(key, index_key, total_number_keys)
+    #             interictal_class.add_dataset(dataset=interictal_object[key].value.transpose(), labels=1)
+    #         interictal_object.close()
+        if 'processed_preictal' in s_file:
             preictal_class = Base(input_path=dataset_path, filename='final_preictal_training_dataset')
             print 'processing preictal'
             file_path = os.path.join(dataset_path, s_file)
@@ -310,16 +310,16 @@ def concatenate_data_points(program_path):
                 print 'processing key={0}, {1} out of {2}'.format(key, index_key, total_number_keys)
                 preictal_class.add_dataset(dataset=preictal_object[key].value.transpose(), labels=0)
             preictal_object.close()
-        elif 'processed_testing' in s_file:
-            testing_class = Base(input_path=dataset_path, filename='final_testing_pre-inter_ictal_dataset')
-            print 'processing testing'
-            file_path = os.path.join(dataset_path, s_file)
-            testing_object = h5py.File(file_path, 'r')
-            total_number_keys = len(testing_object.keys())
-            for index_key, key in enumerate(testing_object.keys()):
-                print 'processing key={0}, {1} out of {2}'.format(key, index_key, total_number_keys)
-                testing_class.add_dataset(dataset=testing_object[key].value.transpose(), labels=0)
-            testing_object.close()
+    #     if 'processed_testing' in s_file:
+    #         testing_class = Base(input_path=dataset_path, filename='final_testing_pre-inter_ictal_dataset')
+    #         print 'processing testing'
+    #         file_path = os.path.join(dataset_path, s_file)
+    #         testing_object = h5py.File(file_path, 'r')
+    #         total_number_keys = len(testing_object.keys())
+    #         for index_key, key in enumerate(testing_object.keys()):
+    #             print 'processing key={0}, {1} out of {2}'.format(key, index_key, total_number_keys)
+    #             testing_class.add_dataset(dataset=testing_object[key].value.transpose(), labels=0)
+    #         testing_object.close()
 
 
 def hmm_build_train(program_path):
@@ -327,9 +327,9 @@ def hmm_build_train(program_path):
     dataset_path = os.path.join(program_path, 'dataset')
 
     print 'creating the datasets path'
-    preictal_data_path = os.path.join(dataset_path, 'preictal_training_dataset.hdf5')
-    interictal_data_path = os.path.join(dataset_path, 'interictal_training_dataset.hdf5')
-    testing_data_path = os.path.join(dataset_path, 'testing_dataset.hdf5')
+    preictal_data_path = os.path.join(dataset_path, 'final_preictal_training_dataset.hdf5')
+    interictal_data_path = os.path.join(dataset_path, 'final_interictal_training_dataset.hdf5')
+    testing_data_path = os.path.join(dataset_path, 'final_testing_pre-inter_ictal_dataset.hdf5')
 
     preictal_model_loaded = False
     interictal_model_loaded = False
@@ -422,9 +422,6 @@ if __name__ == '__main__':
 
     # convert_matlab_h5py(program_path=current_program_path)
     # process_data_points(program_path=current_program_path)
-    concatenate_data_points(program_path=current_program_path)
-    # hmm_build_train(program_path=current_program_path)
-
-
-
+    # concatenate_data_points(program_path=current_program_path)
+    hmm_build_train(program_path=current_program_path)
 
