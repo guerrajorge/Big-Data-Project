@@ -384,7 +384,7 @@ def hmm_build_train(program_path):
         print 'loading interictal dataset'
         interictal_dataset = h5py.File(name=interictal_data_path, mode='r')
         # calculate the length of each of the unique matlab files conforming the interictal dataset
-        list_of_lengths = [239766] * 29
+        list_of_lengths = [239766] * 449
         rest_of_array = int(interictal_dataset['training data'].shape[0] - np.sum(list_of_lengths))
         list_of_lengths.append(rest_of_array)
         interictal_length = np.array(list_of_lengths)
@@ -414,6 +414,7 @@ def hmm_build_train(program_path):
     true_results = obtain_true_results()
     true_count = 0.0
 
+    output_file = open('results.csv','w')
     for testing_key in testing_dataset.keys():
         print 'calculating likelihoodi for {0}'.format(testing_key)
         interictal_log_prob, _ = interictal_hmm.decode(testing_dataset[testing_key].value)
@@ -423,10 +424,16 @@ def hmm_build_train(program_path):
             # 0 = interictal
             if true_results[testing_key] == 0:
                 true_count += 1
+            row_w = '{0},{1}'.format(testing_key,0)
+            output_file.write(row_w)
+            output_file.write('\n')
         else:
             # 1 = preictal
             if true_results[testing_key] == 1:
                 true_count += 1
+            row_w = '{0},{1}'.format(testing_key,1)
+            output_file.write(row_w)
+            output_file.write('\n')
 
     accuracy = true_count / len(testing_dataset.keys())
     print 'accuracy={0}'.format(accuracy)
