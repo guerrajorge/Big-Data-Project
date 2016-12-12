@@ -327,7 +327,7 @@ def hmm_build_train(program_path):
     print 'creating the datasets path'
     preictal_data_path = os.path.join(dataset_path, 'final_preictal_training_dataset.hdf5')
     interictal_data_path = os.path.join(dataset_path, 'final_interictal_training_dataset.hdf5')
-    testing_data_path = os.path.join(dataset_path, 'final_testing_pre-inter_ictal_dataset.hdf5')
+    testing_data_path = os.path.join(dataset_path, 'processed_testing_training_dataset.hdf5')
 
     preictal_model_loaded = False
     interictal_model_loaded = False
@@ -367,6 +367,9 @@ def hmm_build_train(program_path):
         rest_of_array = int(preictal_dataset['training data'].shape[0] - np.sum(list_of_lengths))
         list_of_lengths.append(rest_of_array)
         preictal_length = np.array(list_of_lengths)
+        
+        if np.sum(preictal_length) != preictal_dataset['training data'].shape[0]:
+            raise ValueError('preictal length variable does not match preictal dataset length')
         print 'creating a preictal Gaussian HMM object'
         preictal_hmm = hmm.GaussianHMM(n_components=8, verbose=True)
         print '\ttraining the model'
@@ -385,6 +388,9 @@ def hmm_build_train(program_path):
         rest_of_array = int(interictal_dataset['training data'].shape[0] - np.sum(list_of_lengths))
         list_of_lengths.append(rest_of_array)
         interictal_length = np.array(list_of_lengths)
+
+        if np.sum(interictal_length) != interictal_dataset['training data'].shape[0]:
+            raise ValueError('preictal length variable does not match preictal dataset length')
         # interictal_length = np.array([239766] * 300)
         # interictal_length = np.array([239766] * 200)
         # interictal_length = np.array([239766] * 100)
@@ -409,9 +415,9 @@ def hmm_build_train(program_path):
     true_count = 0.0
 
     for testing_key in testing_dataset.keys():
-        print 'calculating likelihood'
-        interictal_log_prob, _ = interictal_hmm.decode(testing_dataset[testing_key].value.transpose(), [239766])
-        preictal_log_prob, _ = preictal_hmm.decode(testing_dataset[testing_key].value.transpose(), [239766])
+        print 'calculating likelihoodi for {0}'.format(testing_key)
+        interictal_log_prob, _ = interictal_hmm.decode(testing_dataset[testing_key].value)
+        preictal_log_prob, _ = preictal_hmm.decode(testing_dataset[testing_key].value)
 
         if interictal_log_prob > preictal_log_prob:
             # 0 = interictal
@@ -435,7 +441,7 @@ def obtain_true_results():
     true_predictions = open('SzPrediction_answer_key.csv')
     for line in true_predictions:
         line_separated = line.split(',')
-        key_file = line_separated[0].replace('.mat')
+        key_file = line_separated[0].replace('.mat', '')
         prediction_value = line_separated[1]
         true_dict[key_file] = int(prediction_value)
 
