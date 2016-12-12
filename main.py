@@ -67,8 +67,6 @@ def calculate_statistical_descriptors(h5py_object, filename, dataset):
     step = 1
     chunks = sliding_window(dataset, window_size, step)
 
-    label_list = list()
-
     # mean, variance and label lists
     mean_list = list()
     variance_list = list()
@@ -105,7 +103,7 @@ def calculate_statistical_descriptors(h5py_object, filename, dataset):
 
     # the name of the dataset is the name of the file being process
     # the data of the dataset consist of the actual data for columns 0,...,n-1 and the labels in the last column
-    h5py_object.create_dataset(name=filename, data=n_statistical_descriptors)
+    h5py_object.create_dataset(name=filename, data=n_statistical_descriptors, dtype='float32')
 
 
 def sliding_window(sequence, window_size, step=1):
@@ -219,9 +217,9 @@ def convert_matlab_h5py(program_path):
 
 def process_data_points(program_path):
     """
-
-    :param program_path:
-    :return:
+    calculate statistical descriptors of the datasets
+    :param program_path: location of the dataset
+    :return: stores values calculated into another file starting with 'processed_'
     """
     dataset_path = os.path.join(program_path, 'dataset')
 
@@ -298,7 +296,7 @@ def concatenate_data_points(program_path):
     #         total_number_keys = len(interictal_object.keys())
     #         for index_key, key in enumerate(interictal_object.keys()):
     #             print 'processing key={0}, {1} out of {2}'.format(key, index_key, total_number_keys)
-    #             interictal_class.add_dataset(dataset=interictal_object[key].value.transpose(), labels=1)
+    #             interictal_class.add_dataset(dataset=interictal_object[key].value, labels=1)
     #         interictal_object.close()
         if 'processed_preictal' in s_file:
             preictal_class = Base(input_path=dataset_path, filename='final_preictal_training_dataset')
@@ -308,7 +306,7 @@ def concatenate_data_points(program_path):
             total_number_keys = len(preictal_object.keys())
             for index_key, key in enumerate(preictal_object.keys()):
                 print 'processing key={0}, {1} out of {2}'.format(key, index_key, total_number_keys)
-                preictal_class.add_dataset(dataset=preictal_object[key].value.transpose(), labels=0)
+                preictal_class.add_dataset(dataset=preictal_object[key].value, labels=0)
             preictal_object.close()
     #     if 'processed_testing' in s_file:
     #         testing_class = Base(input_path=dataset_path, filename='final_testing_pre-inter_ictal_dataset')
@@ -318,7 +316,7 @@ def concatenate_data_points(program_path):
     #         total_number_keys = len(testing_object.keys())
     #         for index_key, key in enumerate(testing_object.keys()):
     #             print 'processing key={0}, {1} out of {2}'.format(key, index_key, total_number_keys)
-    #             testing_class.add_dataset(dataset=testing_object[key].value.transpose(), labels=0)
+    #             testing_class.add_dataset(dataset=testing_object[key].value, labels=0)
     #         testing_object.close()
 
 
@@ -425,6 +423,6 @@ if __name__ == '__main__':
 
     # convert_matlab_h5py(program_path=current_program_path)
     # process_data_points(program_path=current_program_path)
-    # concatenate_data_points(program_path=current_program_path)
-    hmm_build_train(program_path=current_program_path)
+    concatenate_data_points(program_path=current_program_path)
+    # hmm_build_train(program_path=current_program_path)
 
