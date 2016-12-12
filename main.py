@@ -363,7 +363,10 @@ def hmm_build_train(program_path):
         print 'loading preictal dataset'
         preictal_dataset = h5py.File(name=preictal_data_path, mode='r')
         # calculate the length of each of the unique matlab files conforming the preictal dataset
-        preictal_length = np.array([239766] * 30)
+        list_of_lengths = [239766] * 29
+        rest_of_array = int(preictal_dataset['training data'].shape[0] - np.sum(list_of_lengths))
+        list_of_lengths.append(rest_of_array)
+        preictal_length = np.array(list_of_lengths)
         print 'creating a preictal Gaussian HMM object'
         preictal_hmm = hmm.GaussianHMM(n_components=8, verbose=True)
         print '\ttraining the model'
@@ -378,7 +381,10 @@ def hmm_build_train(program_path):
         print 'loading interictal dataset'
         interictal_dataset = h5py.File(name=interictal_data_path, mode='r')
         # calculate the length of each of the unique matlab files conforming the interictal dataset
-        interictal_length = np.array([239766] * 450)
+        list_of_lengths = [239766] * 29
+        rest_of_array = int(interictal_dataset['training data'].shape[0] - np.sum(list_of_lengths))
+        list_of_lengths.append(rest_of_array)
+        interictal_length = np.array(list_of_lengths)
         # interictal_length = np.array([239766] * 300)
         # interictal_length = np.array([239766] * 200)
         # interictal_length = np.array([239766] * 100)
@@ -399,7 +405,9 @@ def hmm_build_train(program_path):
     print 'loading testing dataset'
     testing_dataset = h5py.File(name=testing_data_path, mode='r')
 
-    output_file = open('results.csv', 'wb')
+    true_results = obtain_true_results()
+    true_count = 0.0
+
     for testing_key in testing_dataset.keys():
         print 'calculating likelihood'
         interictal_log_prob, _ = interictal_hmm.decode(testing_dataset[testing_key].value.transpose(), [239766])
@@ -407,14 +415,31 @@ def hmm_build_train(program_path):
 
         if interictal_log_prob > preictal_log_prob:
             # 0 = interictal
-            print 'data= {0} prediction {1}'.format(testing_key, 0)
-            output_file.write(str(testing_key) + ',' + str(0) + '\n')
+            if true_results[testing_key] == 0:
+                true_count += 1
         else:
             # 1 = preictal
-            print 'data= {0} prediction {1}'.format(testing_key, 1)
-            output_file.write(str(testing_key) + ',' + str(1) + '\n')
+            if true_results[testing_key] == 1:
+                true_count += 1
 
-    output_file.close()
+    accuracy = true_count / len(testing_dataset.keys())
+    print 'accuracy={0}'.format(accuracy)
+
+
+def obtain_true_results():
+    """
+    :return: the ground true labels in a dictionary variable
+    """
+
+    true_dict = dict()
+    true_predictions = open('SzPrediction_answer_key.csv')
+    for line in true_predictions:
+        line_separated = line.split(',')
+        key_file = line_separated[0].replace('.mat')
+        prediction_value = line_separated[1]
+        true_dict[key_file] = int(prediction_value)
+
+    return true_dict
 
 if __name__ == '__main__':
 
@@ -423,6 +448,5 @@ if __name__ == '__main__':
 
     # convert_matlab_h5py(program_path=current_program_path)
     # process_data_points(program_path=current_program_path)
-    concatenate_data_points(program_path=current_program_path)
-    # hmm_build_train(program_path=current_program_path)
-
+    # concatenate_data_points(program_path=current_program_path)
+    hmm_build_train(program_path=current_program_path)
