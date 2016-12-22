@@ -459,7 +459,7 @@ if __name__ == '__main__':
     # big-data project path
     current_program_path = '/'.join(os.path.realpath(__file__).split('/')[:-1])
 
-    # convert_matlab_h5py(program_path=current_program_path)
-    # process_data_points(program_path=current_program_path)
-    # concatenate_data_points(program_path=current_program_path)
+    convert_matlab_h5py(program_path=current_program_path)
+    process_data_points(program_path=current_program_path)
+    concatenate_data_points(program_path=current_program_path)
     hmm_build_train(program_path=current_program_path)
